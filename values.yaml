@@ -3,11 +3,11 @@ hosts:
     # Optional: name of TLS secret for this host (if using cert-manager + secret)
     tlsSecret: envoy-dotops-ru-cert
     routes:
-      - name: my-service
+      - name: dotops-lending
         path: /
         service:
-          name: my-service
-          port: 80sd
+          name: dotops-lending
+          port: 80
 
 # Email for ACME
 acmeEmail: vlad.kanatik@icloud.com
