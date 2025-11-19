@@ -13,6 +13,15 @@ spec:
       labels:
         app: envoy-gateway
     spec:
+      {{- if .Values.dedicatedNode.enabled }}
+      nodeSelector:
+        {{ .Values.dedicatedNode.key }}: {{ .Values.dedicatedNode.value }}
+      tolerations:
+        - key: {{ .Values.dedicatedNode.key }}
+          operator: "Equal"
+          value: {{ .Values.dedicatedNode.value }}
+          effect: "NoSchedule"
+      {{- end }}
       containers:
         - name: manager
           image: {{ .Values.gateway.image }}

@@ -20,10 +20,10 @@ dedicatedNode:
 
 # Envoy image
 envoy:
-  image: envoyproxy/envoy:latest
+  image: docker.io/envoyproxy/envoy:latest
 
 gateway:
-  image: envoyproxy/gateway:latest
+  image: docker.io/envoyproxy/gateway:latest
   # gateway class name used by Gateway resource
   className: envoy
   # default TLS secret referenced by Gateway for certificates
