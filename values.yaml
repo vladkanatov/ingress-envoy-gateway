@@ -1,0 +1,33 @@
+hosts:
+  - host: dotops.ru
+    # Optional: name of TLS secret for this host (if using cert-manager + secret)
+    tlsSecret: envoy-dotops-ru-cert
+    routes:
+      - name: my-service
+        path: /
+        service:
+          name: my-service
+          port: 80sd
+
+# Email for ACME
+acmeEmail: vlad.kanatik@icloud.com
+
+# Node selector / taint toleration for dedicated Envoy node
+dedicatedNode:
+  enabled: true
+  key: "dedicated"
+  value: "envoy"
+
+# Envoy image
+envoy:
+  image: envoyproxy/envoy:latest
+
+gateway:
+  image: envoyproxy/gateway:latest
+  # gateway class name used by Gateway resource
+  className: envoy
+  # default TLS secret referenced by Gateway for certificates
+  tlsSecretName: envoy-domains-cert
+
+certManager:
+  version: v1.15.0

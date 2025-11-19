@@ -1,0 +1,36 @@
+{{- $parentName := "envoy-gateway" -}}
+{{- $parentNs := "envoy-gateway-system" -}}
+{{- range $i, $host := .Values.hosts }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: envoy-route-{{ replace "." "-" $host.host }}
+  namespace: default
+spec:
+  parentRefs:
+    - name: {{ $parentName }}
+      namespace: {{ $parentNs }}
+  hostnames:
+    - "{{ $host.host }}"
+  rules:
+    {{- if $host.routes }}
+    {{- range $r := $host.routes }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: "{{ $r.path }}"
+      backendRefs:
+        - name: "{{ $r.service.name }}"
+          port: {{ $r.service.port }}
+    {{- end }}
+    {{- else }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: my-service
+          port: 80
+    {{- end }}
+---
+{{- end }}

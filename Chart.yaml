@@ -1,0 +1,6 @@
+apiVersion: v2
+name: envoy-gateway
+version: 0.1.0
+description: Envoy Gateway + Envoy Proxy + Cert-Manager integration
+appVersion: "1.0"
+type: application
