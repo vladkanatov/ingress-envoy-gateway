@@ -23,7 +23,7 @@ envoy:
   image: docker.io/envoyproxy/envoy:latest
 
 gateway:
-  image: docker.io/envoyproxy/gateway:1.5.5
+  image: docker.io/envoyproxy/gateway:v1.5.5
   # gateway class name used by Gateway resource
   className: envoy
   # default TLS secret referenced by Gateway for certificates
