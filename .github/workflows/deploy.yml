@@ -29,7 +29,6 @@ jobs:
 
       - name: Deploy Helm chart
         run: |
-          kubectl create namespace envoy-gateway-system --dry-run=client -o yaml | kubectl apply -f -
           helm upgrade --install envoy-gateway . \
             -f values.yaml \
             --namespace envoy-gateway-system \
