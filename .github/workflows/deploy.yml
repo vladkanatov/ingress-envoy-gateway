@@ -32,6 +32,7 @@ jobs:
           helm upgrade --install envoy-gateway . \
             -f values.yaml \
             --namespace envoy-gateway-system \
+            --create-namespace \
             --wait \
             --timeout 5m
 
