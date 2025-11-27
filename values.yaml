@@ -20,7 +20,7 @@ dedicatedNode:
 
 # Envoy image
 envoy:
-  image: docker.io/envoyproxy/envoy:v.1.36.2
+  image: docker.io/envoyproxy/envoy:v1.36.2
 
 gateway:
   image: docker.io/envoyproxy/gateway:v1.5.5
