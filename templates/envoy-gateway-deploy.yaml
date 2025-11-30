@@ -25,6 +25,10 @@ spec:
       containers:
         - name: manager
           image: {{ .Values.gateway.image }}
+          command:
+            - envoy-gateway
+          args:
+            - server
           ports:
             - name: webhook
               containerPort: 9443
