@@ -13,6 +13,7 @@ spec:
       labels:
         app: envoy-gateway
     spec:
+      serviceAccountName: envoy-gateway
       {{- if .Values.dedicatedNode.enabled }}
       nodeSelector:
         {{ .Values.dedicatedNode.key }}: {{ .Values.dedicatedNode.value }}
