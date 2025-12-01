@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: envoy-gateway-certgen
+  namespace: envoy-gateway-system
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: envoy-gateway-certgen
+  namespace: envoy-gateway-system
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: envoy-gateway-certgen
+  namespace: envoy-gateway-system
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: envoy-gateway-certgen
+subjects:
+  - kind: ServiceAccount
+    name: envoy-gateway-certgen
+    namespace: envoy-gateway-system
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: envoy-gateway-certgen
+  namespace: envoy-gateway-system
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      serviceAccountName: envoy-gateway-certgen
+      restartPolicy: Never
+      containers:
+        - name: certgen
+          image: "{{ .Values.gateway.image }}"
+          imagePullPolicy: IfNotPresent
+          command:
+            - envoy-gateway
+          args:
+            - certgen
