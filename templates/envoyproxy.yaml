@@ -1,0 +1,23 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: custom-proxy-config
+  namespace: {{ .Values.gateway.namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        pod:
+          nodeSelector:
+            kubernetes.io/hostname: ingress-01
+          tolerations:
+          - key: dedicated
+            operator: Equal
+            value: envoy
+            effect: NoSchedule
+      envoyService:
+        type: LoadBalancer
+        externalTrafficPolicy: Cluster
+        annotations:
+          svccontroller.k3s.cattle.io/tolerations: '[{"key": "dedicated", "operator": "Equal", "value": "envoy", "effect": "NoSchedule"}]'
