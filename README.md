@@ -94,6 +94,30 @@ helm template . | kubectl apply -f -
 
 ## TLS/HTTPS
 
+### Автоматическое получение сертификатов (cert-manager)
+
+Чарт включает поддержку cert-manager для автоматического получения сертификатов от Let's Encrypt.
+
+**Требования:**
+- Установленный cert-manager в кластере
+- Рабочий DNS в кластере (для доступа к ACME API)
+- Внешний доступ к Gateway для прохождения HTTP-01 challenge
+
+**Включение cert-manager:**
+
+```yaml
+# values.yaml
+certManager:
+  enabled: true
+  email: your-email@example.com
+```
+
+**Проблемы с DNS:**
+
+Если в кластере не работает внешний DNS (как в текущем случае), cert-manager не сможет обратиться к Let's Encrypt API. В этом случае используйте ручное создание сертификата или настройте DNS01 challenge.
+
+### Ручное создание TLS сертификата
+
 Для HTTPS необходимо создать Kubernetes Secret с TLS сертификатом:
 
 ```bash
