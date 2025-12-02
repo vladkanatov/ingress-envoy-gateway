@@ -1,3 +1,4 @@
+# Список хостов и маршрутов
 hosts:
   - host: dotops.ru
     # Optional: name of TLS secret for this host (if using cert-manager + secret)
@@ -9,25 +10,13 @@ hosts:
           name: dotops-lending
           port: 80
 
-# Email for ACME
-acmeEmail: vlad.kanatik@icloud.com
-
-# Node selector / taint toleration for dedicated Envoy node
-dedicatedNode:
-  enabled: true
-  key: "dedicated"
-  value: "envoy"
-
-# Envoy image
-envoy:
-  image: docker.io/envoyproxy/envoy:v1.36.2
-
+# Gateway конфигурация
 gateway:
-  image: docker.io/envoyproxy/gateway:v1.5.5
-  # gateway class name used by Gateway resource
+  # Имя GatewayClass (должно совпадать с установленным Envoy Gateway)
   className: envoy
-  # default TLS secret referenced by Gateway for certificates
+  # Namespace где развернут Gateway
+  namespace: envoy-gateway-system
+  # Имя Gateway ресурса
+  name: envoy-gateway
+  # Секрет с TLS сертификатом по умолчанию для HTTPS listener
   tlsSecretName: envoy-domains-cert
-
-certManager:
-  version: v1.15.0

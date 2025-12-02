@@ -1,10 +1,10 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: envoy-gateway
-  namespace: envoy-gateway-system
+  name: {{ .Values.gateway.name }}
+  namespace: {{ .Values.gateway.namespace }}
 spec:
-  gatewayClassName: {{ default "envoy" .Values.gateway.className }}
+  gatewayClassName: {{ .Values.gateway.className }}
   listeners:
     - name: http
       protocol: HTTP
@@ -16,4 +16,4 @@ spec:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: {{ default "envoy-domains-cert" .Values.gateway.tlsSecretName }}
+            name: {{ .Values.gateway.tlsSecretName }}

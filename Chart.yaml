@@ -1,6 +1,6 @@
 apiVersion: v2
-name: envoy-gateway
-version: 0.1.0
-description: Envoy Gateway + Envoy Proxy + Cert-Manager integration
+name: envoy-gateway-domains
+version: 0.2.0
+description: Helm chart for managing domains and routes with Envoy Gateway (Gateway API)
 appVersion: "1.0"
 type: application
