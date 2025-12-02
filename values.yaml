@@ -20,6 +20,3 @@ gateway:
   name: envoy-gateway
   # Секрет с TLS сертификатом по умолчанию для HTTPS listener
   tlsSecretName: envoy-domains-cert
-  # Node selector для Envoy proxy подов
-  nodeSelector:
-    kubernetes.io/hostname: ingress-01
