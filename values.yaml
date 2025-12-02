@@ -1,8 +1,6 @@
 # Список хостов и маршрутов
 hosts:
   - host: dotops.ru
-    # Optional: name of TLS secret for this host (if using cert-manager + secret)
-    tlsSecret: envoy-dotops-ru-cert
     routes:
       - name: dotops-lending
         path: /
@@ -13,18 +11,12 @@ hosts:
 
 # Gateway конфигурация
 gateway:
-  # Имя GatewayClass (должно совпадать с установленным Envoy Gateway)
   className: envoy
-  # Namespace где развернут Gateway
   namespace: envoy-gateway-system
-  # Имя Gateway ресурса
   name: envoy-gateway
-  # Секрет с TLS сертификатом по умолчанию для HTTPS listener
   tlsSecretName: envoy-domains-cert
 
 # Cert-Manager конфигурация
 certManager:
-  # Включить создание ClusterIssuer и Certificate
   enabled: true
-  # Email для ACME (Let's Encrypt)
   email: vlad.kanatik@icloud.com

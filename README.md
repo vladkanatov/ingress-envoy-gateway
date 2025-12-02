@@ -1,23 +1,43 @@
 # Envoy Gateway Domains Helm Chart
 
-Helm-чарт для управления доменами и маршрутами через Gateway API с уже установленным Envoy Gateway контроллером.
+Helm-чарт для управления доменами и маршрутами через Gateway API с использованием Envoy Gateway.
 
 ## Предварительные требования
 
 - Kubernetes кластер с Gateway API CRD
-- Установленный Envoy Gateway контроллер (например, через официальный Helm-чарт или манифесты)
-- GatewayClass `envoy` должен быть создан и управляться Envoy Gateway контроллером
+- Установленный Envoy Gateway контроллер
+- cert-manager для автоматических TLS сертификатов
 
-## Установка
+## Установка Envoy Gateway
 
 ```bash
-helm install envoy-domains . -f values.yaml
+helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
+  --version v1.5.5 \
+  -n envoy-gateway-system \
+  --create-namespace
 ```
 
-## Обновление
+### Установка на выделенную ноду с taint
+
+Если нода имеет taint (например, `dedicated=envoy`), используйте:
 
 ```bash
-helm upgrade envoy-domains . -f values.yaml
+helm upgrade --install eg oci://docker.io/envoyproxy/gateway-helm \
+  --version v1.5.5 \
+  -n envoy-gateway-system \
+  --set deployment.envoyGateway.nodeSelector."kubernetes\.io/hostname"=ingress-01
+```
+
+## Установка чарта доменов
+
+```bash
+helm install envoy-gateway . -f values.yaml
+```
+
+или напрямую через kubectl:
+
+```bash
+helm template . | kubectl apply -f -
 ```
 
 ## Конфигурация
@@ -39,12 +59,12 @@ gateway:
 ```yaml
 hosts:
   - host: dotops.ru
-    tlsSecret: envoy-dotops-ru-cert  # Опционально: индивидуальный TLS секрет
     routes:
       - name: dotops-lending
         path: /
         service:
           name: dotops-lending
+          namespace: dotops-lending  # Обязательно указывать namespace
           port: 80
 ```
 
@@ -54,15 +74,11 @@ hosts:
 hosts:
   - host: dotops.ru
     routes:
-      - name: api-service
-        path: /api
-        service:
-          name: api-service
-          port: 8080
       - name: web-service
         path: /
         service:
           name: web-service
+          namespace: production
           port: 80
           
   - host: app.dotops.ru
@@ -71,39 +87,15 @@ hosts:
         path: /
         service:
           name: app-backend
+          namespace: production
           port: 3000
 ```
 
-## Проверка шаблонов
+## TLS/HTTPS (cert-manager)
 
-```bash
-helm template envoy-domains . -f values.yaml
-```
+Чарт автоматически настраивает получение TLS сертификатов через cert-manager и Let's Encrypt.
 
-## Применение изменений
-
-```bash
-helm template . | kubectl apply -f -
-```
-
-## Структура чарта
-
-- `templates/gatewayclass.yaml` — GatewayClass ресурс (опционально, если еще не создан)
-- `templates/gateway.yaml` — Gateway ресурс с HTTP/HTTPS listeners
-- `templates/httproute.yaml` — HTTPRoute для каждого хоста из `values.yaml`
-
-## TLS/HTTPS
-
-### Автоматическое получение сертификатов (cert-manager)
-
-Чарт включает поддержку cert-manager для автоматического получения сертификатов от Let's Encrypt.
-
-**Требования:**
-- Установленный cert-manager в кластере
-- Рабочий DNS в кластере (для доступа к ACME API)
-- Внешний доступ к Gateway для прохождения HTTP-01 challenge
-
-**Включение cert-manager:**
+### Настройка cert-manager
 
 ```yaml
 # values.yaml
@@ -112,35 +104,66 @@ certManager:
   email: your-email@example.com
 ```
 
-**Проблемы с DNS:**
+Это создаст:
+- `ClusterIssuer` для Let's Encrypt (production)
+- `Certificate` ресурс для автоматического получения сертификата
+- Автоматическое продление сертификата
 
-Если в кластере не работает внешний DNS (как в текущем случае), cert-manager не сможет обратиться к Let's Encrypt API. В этом случае используйте ручное создание сертификата или настройте DNS01 challenge.
+### Важно для работы ACME HTTP-01 challenge
 
-### Ручное создание TLS сертификата
+1. DNS домена должен указывать на IP адрес Gateway
+2. Порт 80 должен быть доступен извне для проверки Let's Encrypt
+3. CoreDNS в кластере должен иметь доступ к внешнему DNS
 
-Для HTTPS необходимо создать Kubernetes Secret с TLS сертификатом:
+## Размещение на выделенной ноде
 
-```bash
-kubectl create secret tls envoy-domains-cert \
-  --cert=path/to/tls.crt \
-  --key=path/to/tls.key \
-  -n envoy-gateway-system
-```
-
-Или использовать cert-manager для автоматического получения сертификатов:
+Если Envoy Gateway должен работать на конкретной ноде с taint, используйте EnvoyProxy CRD (уже включен в чарт):
 
 ```yaml
-apiVersion: cert-manager.io/v1
-kind: Certificate
+# templates/envoyproxy.yaml автоматически создаётся с:
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
 metadata:
-  name: envoy-domains-cert
-  namespace: envoy-gateway-system
+  name: custom-proxy-config
 spec:
-  secretName: envoy-domains-cert
-  dnsNames:
-    - dotops.ru
-    - "*.dotops.ru"
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
+  provider:
+    kubernetes:
+      envoyDeployment:
+        pod:
+          nodeSelector:
+            kubernetes.io/hostname: ingress-01
+          tolerations:
+          - key: dedicated
+            operator: Equal
+            value: envoy
+            effect: NoSchedule
+      envoyService:
+        type: LoadBalancer
+        externalTrafficPolicy: Cluster
 ```
+
+## Проверка статуса
+
+```bash
+# Gateway
+kubectl get gateway -n envoy-gateway-system
+
+# HTTPRoute
+kubectl get httproute -n envoy-gateway-system
+
+# Certificate
+kubectl get certificate -n envoy-gateway-system
+
+# Проверка сайта
+curl -I https://dotops.ru
+```
+
+## Структура чарта
+
+- `templates/gatewayclass.yaml` — GatewayClass с параметрами EnvoyProxy
+- `templates/gateway.yaml` — Gateway с HTTP/HTTPS listeners
+- `templates/httproute.yaml` — HTTPRoute для каждого хоста
+- `templates/envoyproxy.yaml` — EnvoyProxy с nodeSelector и tolerations
+- `templates/referencegrant.yaml` — ReferenceGrant для cross-namespace доступа
+- `templates/cert-manager-issuer.yaml` — ClusterIssuer для Let's Encrypt
+- `templates/certificate.yaml` — Certificate для автоматического TLS
