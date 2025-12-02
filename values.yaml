@@ -20,3 +20,10 @@ gateway:
   name: envoy-gateway
   # Секрет с TLS сертификатом по умолчанию для HTTPS listener
   tlsSecretName: envoy-domains-cert
+
+# Cert-Manager конфигурация
+certManager:
+  # Включить создание ClusterIssuer и Certificate
+  enabled: true
+  # Email для ACME (Let's Encrypt)
+  email: vlad.kanatik@icloud.com
